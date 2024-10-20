@@ -1,0 +1,6 @@
+{
+  "name": "Shell (simple)",
+  "version": "1.0.0",
+  "description": "Dir tree and execute shell commands",
+  "services": []
+}
