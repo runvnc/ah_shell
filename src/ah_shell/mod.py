@@ -23,6 +23,10 @@ print('Sum:', sum(numbers))
 END_RAW
 } }
 
+    Note: if you need to see the result of your command, 
+    DO NOT end your command list with task_complete() or similar --
+    you will not receive the results until after the user replies.
+
     """
     if 'current_dir' in context.data:
         cmd = f'cd {context.data["current_dir"]} && {cmd}'
