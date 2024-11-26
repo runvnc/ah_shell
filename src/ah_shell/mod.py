@@ -29,6 +29,7 @@ END_RAW
 
     """
     if 'current_dir' in context.data:
+        os.makedirs(context.data['current_dir'], exist_ok=True)
         cmd = f'cd {context.data["current_dir"]} && {cmd}'
     try:
         result = subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
