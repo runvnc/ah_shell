@@ -28,9 +28,9 @@ END_RAW
     you will not receive the results until after the user replies.
 
     """
-    if 'current_dir' in context.data:
-        os.makedirs(context.data['current_dir'], exist_ok=True)
-        cmd = f'cd {context.data["current_dir"]} && {cmd}'
+    #if 'current_dir' in context.data:
+    #    os.makedirs(context.data['current_dir'], exist_ok=True)
+    #    cmd = f'cd {context.data["current_dir"]} && {cmd}'
     try:
         result = subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = result.stdout.decode('utf-8')
@@ -42,18 +42,16 @@ END_RAW
         return f"Command '{cmd}' failed with error code {e.returncode}:\nStderr:\n{e.stderr.decode('utf-8')}\nStdout:\n{e.stdout.decode('utf-8')}"
 
 @command()
-async def mkdir(directory="", context=None):
+async def mkdir(absolute_path="", context=None):
     """Create a new directory.
     Example:
-    { "mkdir": { "directory": "new_folder" } }
+    { "mkdir": { "absolute_path": "/some/new_folder" } }
     """
-    if 'current_dir' in context.data:
-        directory = os.path.join(context.data['current_dir'], directory)
     try:
-        os.makedirs(directory, exist_ok=True)
-        return f"Directory '{directory}' created successfully."
+        os.makedirs(absolute_path, exist_ok=True)
+        return f"Directory '{absolute_path}' created successfully."
     except Exception as e:
-        return f"Failed to create directory '{directory}': {e}"
+        return f"Failed to create directory '{absolute_path}': {e}"
 
 def should_exclude(path, matches):
     return any(fnmatch.fnmatch(path, pattern) for pattern in DEFAULT_EXCLUDE) or matches(path)
