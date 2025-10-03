@@ -105,3 +105,50 @@ if __name__ == '__main__':
         result = await tree(directory, context=context)
         pprint(result)
     asyncio.run(main())
+
+@command()
+async def run_python(text="", context=None):
+    """Execute Python code by writing it to a temporary file and running it.
+    The code will be executed with the current process working directory,
+    but the temporary file will be created in /tmp/.
+    
+    Example:
+    { "run_python": { "text": "print('Hello World!')\nfor i in range(3):\n    print(f'Count: {i}')" } }
+    
+    Note: if you need to see the result of your code execution,
+    DO NOT end your command list with task_complete() or similar --
+    you will not receive the results until after the user replies.
+    """
+    import tempfile
+    import os
+    
+    try:
+        # Create a temporary Python file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', dir='/tmp', delete=False) as temp_file:
+            temp_file.write(text)
+            temp_filename = temp_file.name
+        
+        # Execute the Python file
+        result = subprocess.run(['python', temp_filename], 
+                              capture_output=True, text=True, check=True)
+        
+        # Clean up the temporary file
+        os.unlink(temp_filename)
+        
+        output = result.stdout
+        error = result.stderr
+        
+        if error:
+            return f"Python code executed with stderr output:\n{error}\nStdout:\n{output}"
+        return output
+        
+    except subprocess.CalledProcessError as e:
+        # Clean up the temporary file if it exists
+        if 'temp_filename' in locals() and os.path.exists(temp_filename):
+            os.unlink(temp_filename)
+        return f"Python code execution failed with error code {e.returncode}:\nStderr:\n{e.stderr}\nStdout:\n{e.stdout}"
+    except Exception as e:
+        # Clean up the temporary file if it exists
+        if 'temp_filename' in locals() and os.path.exists(temp_filename):
+            os.unlink(temp_filename)
+        return f"Failed to execute Python code: {e}"
