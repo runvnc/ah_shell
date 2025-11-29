@@ -1,4 +1,5 @@
 import os
+import asyncio
 import subprocess
 import fnmatch
 from lib.providers.commands import command
@@ -32,14 +33,21 @@ END_RAW
     #    os.makedirs(context.data['current_dir'], exist_ok=True)
     #    cmd = f'cd {context.data["current_dir"]} && {cmd}'
     try:
-        result = subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output = result.stdout.decode('utf-8')
-        error = result.stderr.decode('utf-8')
+        process = await asyncio.create_subprocess_shell(
+            cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await process.communicate()
+        output = stdout.decode('utf-8')
+        error = stderr.decode('utf-8')
+        if process.returncode != 0:
+            return f"Command '{cmd}' failed with error code {process.returncode}:\nStderr:\n{error}\nStdout:\n{output}"
         if error:
             return f"Command executed with stderr output:\n{error}\nStdout:\n{output}"
         return output
-    except subprocess.CalledProcessError as e:
-        return f"Command '{cmd}' failed with error code {e.returncode}:\nStderr:\n{e.stderr.decode('utf-8')}\nStdout:\n{e.stdout.decode('utf-8')}"
+    except Exception as e:
+        return f"Command '{cmd}' failed with error: {e}"
 
 @command()
 async def mkdir(absolute_path="", context=None):
@@ -120,7 +128,6 @@ async def run_python(text="", context=None):
     you will not receive the results until after the user replies.
     """
     import tempfile
-    import os
     
     try:
         # Create a temporary Python file
@@ -129,24 +136,25 @@ async def run_python(text="", context=None):
             temp_filename = temp_file.name
         
         # Execute the Python file
-        result = subprocess.run(['python', temp_filename], 
-                              capture_output=True, text=True, check=True)
+        process = await asyncio.create_subprocess_exec(
+            'python', temp_filename,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await process.communicate()
         
         # Clean up the temporary file
         os.unlink(temp_filename)
         
-        output = result.stdout
-        error = result.stderr
+        output = stdout.decode('utf-8')
+        error = stderr.decode('utf-8')
         
+        if process.returncode != 0:
+            return f"Python code execution failed with error code {process.returncode}:\nStderr:\n{error}\nStdout:\n{output}"
         if error:
             return f"Python code executed with stderr output:\n{error}\nStdout:\n{output}"
         return output
         
-    except subprocess.CalledProcessError as e:
-        # Clean up the temporary file if it exists
-        if 'temp_filename' in locals() and os.path.exists(temp_filename):
-            os.unlink(temp_filename)
-        return f"Python code execution failed with error code {e.returncode}:\nStderr:\n{e.stderr}\nStdout:\n{e.stdout}"
     except Exception as e:
         # Clean up the temporary file if it exists
         if 'temp_filename' in locals() and os.path.exists(temp_filename):
