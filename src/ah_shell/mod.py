@@ -141,7 +141,7 @@ async def run_python(text="", context=None):
         if not shutil.which(bin_name):
             bin_name = 'python3'
         process = await asyncio.create_subprocess_exec(
-            'python', temp_filename,
+            bin_name, temp_filename,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
