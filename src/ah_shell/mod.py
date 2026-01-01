@@ -6,6 +6,8 @@ from lib.providers.commands import command
 from gitignore_parser import parse_gitignore
 from collections import OrderedDict
 
+import shutil
+
 DEFAULT_EXCLUDE = ['.git', 'node_modules', 'dist', 'build', 'coverage', '__pycache__', '.ipynb_checkpoints']
 
 @command()
