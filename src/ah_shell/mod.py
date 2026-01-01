@@ -134,8 +134,10 @@ async def run_python(text="", context=None):
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', dir='/tmp', delete=False) as temp_file:
             temp_file.write(text)
             temp_filename = temp_file.name
-        
-        # Execute the Python file
+       
+        bin_name = 'python'
+        if not shutil.which(bin_name):
+            bin_name = 'python3'
         process = await asyncio.create_subprocess_exec(
             'python', temp_filename,
             stdout=asyncio.subprocess.PIPE,
