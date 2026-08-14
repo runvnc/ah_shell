@@ -11,12 +11,12 @@ import shutil
 DEFAULT_EXCLUDE = ['.git', 'node_modules', 'dist', 'build', 'coverage', '__pycache__', '.ipynb_checkpoints']
 
 @command()
-async def execute_command(cmd="", context=None):
+async def execute_command(command="", context=None):
     """Execute a system command and return the output.
 
-    Example:
+    Example (RAW mode):
     
-    { "execute_command": { "cmd": START_RAW
+    { "execute_command": { "command": START_RAW
 python -c "
 import random
 numbers = [random.randint(1, 100) for _ in range(10)]
@@ -30,11 +30,24 @@ END_RAW
     DO NOT end your command list with task_complete() or similar --
     you will not receive the results until after the user replies.
 
+
+"properties": {
+    "command": {
+    "type": "string",
+    "description": "The bash command to execute."
+    }
+ }
+
+ You can also run the command in standard JSON mode for the command arg, but string MUST 
+ be properly escaped in JSON mode (e.g. double quotes, newlines etc.)
+
     """
     #if 'current_dir' in context.data:
     #    os.makedirs(context.data['current_dir'], exist_ok=True)
     #    cmd = f'cd {context.data["current_dir"]} && {cmd}'
+    cmd = command
     try:
+
         process = await asyncio.create_subprocess_shell(
             cmd,
             stdout=asyncio.subprocess.PIPE,
